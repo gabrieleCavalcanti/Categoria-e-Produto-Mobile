@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker'; // dropdown
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, Image, Button, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, TextInput } from 'react-native';
 import api from '../../api/api';
 
 
@@ -12,6 +13,12 @@ export type Produto = {
     data_vencimento: Date,
     valor_produto: number,
     quantidade_minima: number,
+}
+
+type Categoria = {
+    id_categoria: number;
+    nome_categoria: string;
+    ativo: boolean;
 }
 
 
@@ -129,9 +136,14 @@ export default function ProdutoScreen() {
     const [quantidadeMinima, setQuantidadeMinima] = useState('');
     const [imagemUri, setImagemUri] = useState('');
 
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
+
+
     useEffect(() => {
         const setup = async () => {
             await loadData();
+            await loadCategorias();
+
         }
         setup();
     }, [])
@@ -147,6 +159,18 @@ export default function ProdutoScreen() {
             console.error(error);
         }
 
+    }
+    async function loadCategorias() {
+        try {
+            const response = await api.get('/categoriasAtiva');
+
+            console.log(response.data);
+
+            setCategorias(response.data.categorias);
+
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async function selecionarImagem() {
@@ -296,6 +320,10 @@ export default function ProdutoScreen() {
         setModalVisible(true);
     }
 
+    function formatarData(data: string | Date) {
+        return new Date(data).toLocaleDateString('pt-BR');
+    }
+
     function closeModal(): void {
         setModalVisible(false);
         //   setSelectedProduto(null);
@@ -310,19 +338,31 @@ export default function ProdutoScreen() {
 
     async function handleDelete(id: number) {
         try {
-            console.log("ID recebido:", id);
-
             const response = await api.delete(`/produtos/${id}`);
 
-            console.log("DELETE OK");
-            console.log(response.data);
+            Alert.alert(
+                'Sucesso',
+                'Produto excluído com sucesso!'
+            );
 
             await loadData();
+
         } catch (error: any) {
-            console.log("ERRO DELETE");
-            console.log(error.response?.status);
+
+            if (error.response?.status === 400) {
+                Alert.alert(
+                    'Não foi possível excluir',
+                    error.response.data.errorMessage
+                );
+                return;
+            }
+
+            Alert.alert(
+                'Erro',
+                'Ocorreu um erro ao excluir o produto.'
+            );
+
             console.log(error.response?.data);
-            console.log(error.message);
         }
     }
 
@@ -346,8 +386,40 @@ export default function ProdutoScreen() {
 
                         <View style={styles.cardInner}>
                             <View style={styles.cardContent}>
+                                <View style={styles.cardContent}>
+
+                                    <Image
+                                        source={{
+                                            uri: `http://10.87.169.83:8000/uploads/Images/${item.vinculo_imagem}`
+                                        }}
+                                        style={styles.imagemProduto}
+                                    />
+
+                                    <Text style={styles.title}>
+                                        {item.nome_produto}
+                                    </Text>
+
+                                    <Text style={styles.title}>
+                                        Categoria: {
+                                            categorias.find(
+                                                categoria => categoria.id_categoria === item.id_categoria
+                                            )?.nome_categoria || 'Não encontrada'
+                                        }
+                                    </Text>
+
+                                </View>
+                                <Text style={styles.title}>{item.nome_produto}</Text>
                                 <Text style={styles.title}>ID: {item.id_produto}</Text>
-                                <Text style={styles.title}>Produto: {item.nome_produto}</Text>
+                                <Text style={styles.title}>Valor: {item.valor_produto}</Text>
+                                <Text style={styles.title}>Qtd Minima: {item.quantidade_minima}</Text>
+                                <Text style={styles.title}>Vencimento: {formatarData(item.data_vencimento)}</Text>
+                                <Text style={styles.title}>
+                                    Categoria: {
+                                        categorias.find(
+                                            categoria => categoria.id_categoria === item.id_categoria
+                                        )?.nome_categoria || 'Categoria não encontrada'
+                                    }
+                                </Text>
                             </View>
 
                             <View style={styles.actions}>
@@ -407,13 +479,32 @@ export default function ProdutoScreen() {
                                 Selecionar Imagem
                             </Text>
                         </TouchableOpacity>
-                        <TextInput
+                        {/* <TextInput
                             placeholder="ID Categoria"
                             value={idCategoria}
                             onChangeText={setIdCategoria}
                             keyboardType="numeric"
                             style={styles.input}
-                        />
+                        /> */}
+                        <View style={styles.input}>
+                            <Picker
+                                selectedValue={idCategoria}
+                                onValueChange={(itemValue) => setIdCategoria(String(itemValue))}
+                            >
+                                <Picker.Item
+                                    label="Selecione uma categoria"
+                                    value=""
+                                />
+
+                                {categorias.map((categoria) => (
+                                    <Picker.Item
+                                        key={categoria.id_categoria}
+                                        label={categoria.nome_categoria}
+                                        value={String(categoria.id_categoria)}
+                                    />
+                                ))}
+                            </Picker>
+                        </View>
 
                         <TextInput
                             placeholder="Data Vencimento (2026-12-31)"
@@ -523,7 +614,12 @@ const styles = StyleSheet.create({
         // sombra Android
         elevation: 4,
     },
-
+    imagemProduto: {
+        width: '100%',
+        height: 180,
+        borderRadius: 10,
+        marginBottom: 12,
+    },
     cardContent: {
         marginBottom: 12,
     },
