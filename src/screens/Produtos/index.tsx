@@ -149,19 +149,19 @@ export default function ProdutoScreen() {
 
     }
 
-async function selecionarImagem() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 1,
-    });
+    async function selecionarImagem() {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            quality: 1,
+        });
 
-    console.log(result);
+        console.log(result);
 
-    if (!result.canceled) {
-        setImagemUri(result.assets[0].uri);
-        console.log("Imagem:", result.assets[0].uri);
+        if (!result.canceled) {
+            setImagemUri(result.assets[0].uri);
+            console.log("Imagem:", result.assets[0].uri);
+        }
     }
-}
 
     // async function salvar() {
     //     try {
@@ -201,69 +201,69 @@ async function selecionarImagem() {
     //         console.log(error.message);
     //     }
     // }
-async function salvar() {
-  console.log("SALVAR CLICADO");
-  console.log("selectedProduto:", selectedProduto);
-  console.log("EDITANDO?", !!selectedProduto);
-console.log("ID:", selectedProduto?.id_produto);
-  try {
-    const formData = new FormData();
+    async function salvar() {
+        console.log("SALVAR CLICADO");
+        console.log("selectedProduto:", selectedProduto);
+        console.log("EDITANDO?", !!selectedProduto);
+        console.log("ID:", selectedProduto?.id_produto);
+        try {
+            const formData = new FormData();
 
-    formData.append('nome_produto', nomeProduto);
-    formData.append('id_categoria', idCategoria);
-    formData.append('data_vencimento', dataVencimento);
-    formData.append('valor_produto', valorProduto);
-    formData.append('quantidade_minima', quantidadeMinima);
+            formData.append('nome_produto', nomeProduto);
+            formData.append('id_categoria', idCategoria);
+            formData.append('data_vencimento', dataVencimento);
+            formData.append('valor_produto', valorProduto);
+            formData.append('quantidade_minima', quantidadeMinima);
 
-    // só envia imagem se uma nova foi selecionada
-    if (imagemUri) {
-      formData.append(
-        'image',
-        {
-          uri: imagemUri,
-          name: 'produto.jpg',
-          type: 'image/jpeg',
-        } as any
-      );
-    }
+            // só envia imagem se uma nova foi selecionada
+            if (imagemUri) {
+                formData.append(
+                    'image',
+                    {
+                        uri: imagemUri,
+                        name: 'produto.jpg',
+                        type: 'image/jpeg',
+                    } as any
+                );
+            }
 
-    let response;
+            let response;
 
-if (selectedProduto) {
-  console.log("PATCH");
+            if (selectedProduto) {
+                console.log("PATCH");
 
-  response = await api.patch(
-    `/produtos/${selectedProduto.id_produto}`,
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  );
+                response = await api.patch(
+                    `/produtos/${selectedProduto.id_produto}`,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
 
-    } else {
-      response = await api.post(
-        '/produtos',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+            } else {
+                response = await api.post(
+                    '/produtos',
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+            }
+
+            console.log(response.data);
+
+            closeModal();
+            await loadData();
+
+        } catch (error: any) {
+            console.log(error.response?.data);
+            console.log(error.message);
         }
-      );
     }
-
-    console.log(response.data);
-
-    closeModal();
-    await loadData();
-
-  } catch (error: any) {
-    console.log(error.response?.data);
-    console.log(error.message);
-  }
-}
 
     function openCreate(): void {
         setSelectedProduto(null);
@@ -279,22 +279,22 @@ if (selectedProduto) {
     }
 
 
-function openEdit(item: Produto): void {
-    setSelectedProduto(item);
+    function openEdit(item: Produto): void {
+        setSelectedProduto(item);
 
-    setNomeProduto(item.nome_produto);
-    setIdCategoria(String(item.id_categoria));
-    setDataVencimento(
-      String(item.data_vencimento).split('T')[0]
-    );
-    setValorProduto(String(item.valor_produto));
-    setQuantidadeMinima(String(item.quantidade_minima));
+        setNomeProduto(item.nome_produto);
+        setIdCategoria(String(item.id_categoria));
+        setDataVencimento(
+            String(item.data_vencimento).split('T')[0]
+        );
+        setValorProduto(String(item.valor_produto));
+        setQuantidadeMinima(String(item.quantidade_minima));
 
-    // limpa a imagem nova
-    setImagemUri('');
+        // limpa a imagem nova
+        setImagemUri('');
 
-    setModalVisible(true);
-}   
+        setModalVisible(true);
+    }
 
     function closeModal(): void {
         setModalVisible(false);
@@ -309,10 +309,21 @@ function openEdit(item: Produto): void {
     }
 
     async function handleDelete(id: number) {
+        try {
+            console.log("ID recebido:", id);
 
-        await api.delete(`/produtos/${id}`);
+            const response = await api.delete(`/produtos/${id}`);
 
-        await loadData();
+            console.log("DELETE OK");
+            console.log(response.data);
+
+            await loadData();
+        } catch (error: any) {
+            console.log("ERRO DELETE");
+            console.log(error.response?.status);
+            console.log(error.response?.data);
+            console.log(error.message);
+        }
     }
 
     return (
