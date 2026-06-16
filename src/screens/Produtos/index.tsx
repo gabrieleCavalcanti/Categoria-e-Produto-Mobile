@@ -138,6 +138,8 @@ export default function ProdutoScreen() {
 
     const [categorias, setCategorias] = useState<Categoria[]>([]);
 
+    const API_URL = api.defaults.baseURL;
+
 
     useEffect(() => {
         const setup = async () => {
@@ -390,7 +392,7 @@ export default function ProdutoScreen() {
 
                                     <Image
                                         source={{
-                                            uri: `http://10.87.169.83:8000/uploads/Images/${item.vinculo_imagem}`
+                                            uri: `${api.defaults.baseURL}/uploads/Images/${item.vinculo_imagem}`
                                         }}
                                         style={styles.imagemProduto}
                                     />
