@@ -51,12 +51,14 @@ export default function CategoriaScreen() {
 
   
   async function salvar() {
-    if (!nomeCategoria.trim()) return;
+    if (!nomeCategoria.trim()) {Alert.alert('Atenção', 'Informe o nome da categoria.');return;}
+    let response;
     if (selectedCategoria) {
-        await api.patch(`/categorias/${selectedCategoria.id_categoria}`, {nome_categoria: nomeCategoria});
+        response = await api.patch(`/categorias/${selectedCategoria.id_categoria}`, {nome_categoria: nomeCategoria});
     } else {
-        await api.post(`/categorias/`, {nome_categoria: nomeCategoria});
+        response = await api.post(`/categorias/`, {nome_categoria: nomeCategoria});
     }
+    Alert.alert(response.data.message);
     closeModal();
     await loadData();
   }
@@ -143,7 +145,7 @@ export default function CategoriaScreen() {
               <View style={styles.cardContent}>
                 <Text style={styles.title}>ID: {item.id_categoria}</Text>
                 <Text style={styles.title}>Categoria: {item.nome_categoria}</Text>
-                <Text style={styles.title}>{item.ativo}</Text>
+                <Text style={styles.title}>{item.ativo ? 'Ativo' : 'Desativado'}</Text>
               </View>
 
               <View style={styles.actions}>
@@ -227,7 +229,7 @@ const styles = StyleSheet.create({
   },
   sideBar: {
     width: 6,
-    backgroundColor: "#FF9800", // laranja 🍊
+    backgroundColor: "#541414", 
   },
 
   cardInner: {

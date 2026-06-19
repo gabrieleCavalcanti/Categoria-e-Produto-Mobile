@@ -228,10 +228,6 @@ export default function ProdutoScreen() {
     //     }
     // }
     async function salvar() {
-        console.log("SALVAR CLICADO");
-        console.log("selectedProduto:", selectedProduto);
-        console.log("EDITANDO?", !!selectedProduto);
-        console.log("ID:", selectedProduto?.id_produto);
         try {
             const formData = new FormData();
 
@@ -269,8 +265,7 @@ export default function ProdutoScreen() {
                 );
 
             } else {
-                response = await api.post(
-                    '/produtos',
+                response = await api.post('/produtos',
                     formData,
                     {
                         headers: {
@@ -280,7 +275,7 @@ export default function ProdutoScreen() {
                 );
             }
 
-            console.log(response.data);
+            Alert.alert(response.data.message);
 
             closeModal();
             await loadData();
@@ -288,6 +283,10 @@ export default function ProdutoScreen() {
         } catch (error: any) {
             console.log(error.response?.data);
             console.log(error.message);
+            Alert.alert(
+                'Erro',
+                error.response?.data?.message || 'Ocorreu um erro'
+            );
         }
     }
 
@@ -341,28 +340,17 @@ export default function ProdutoScreen() {
     async function handleDelete(id: number) {
         try {
             const response = await api.delete(`/produtos/${id}`);
-
-            Alert.alert(
-                'Sucesso',
-                'Produto excluído com sucesso!'
-            );
+            Alert.alert('Sucesso', 'Produto excluído com sucesso!');
 
             await loadData();
 
         } catch (error: any) {
 
             if (error.response?.status === 400) {
-                Alert.alert(
-                    'Não foi possível excluir',
-                    error.response.data.errorMessage
-                );
-                return;
+                Alert.alert('Não foi possível excluir', error.response.data.errorMessage); return;
             }
 
-            Alert.alert(
-                'Erro',
-                'Ocorreu um erro ao excluir o produto.'
-            );
+            Alert.alert('Erro', 'Ocorreu um erro ao excluir o produto.');
 
             console.log(error.response?.data);
         }
@@ -410,18 +398,10 @@ export default function ProdutoScreen() {
                                     </Text>
 
                                 </View>
-                                <Text style={styles.title}>{item.nome_produto}</Text>
                                 <Text style={styles.title}>ID: {item.id_produto}</Text>
                                 <Text style={styles.title}>Valor: {item.valor_produto}</Text>
                                 <Text style={styles.title}>Qtd Minima: {item.quantidade_minima}</Text>
                                 <Text style={styles.title}>Vencimento: {formatarData(item.data_vencimento)}</Text>
-                                <Text style={styles.title}>
-                                    Categoria: {
-                                        categorias.find(
-                                            categoria => categoria.id_categoria === item.id_categoria
-                                        )?.nome_categoria || 'Categoria não encontrada'
-                                    }
-                                </Text>
                             </View>
 
                             <View style={styles.actions}>
@@ -564,7 +544,7 @@ const styles = StyleSheet.create({
     },
     sideBar: {
         width: 6,
-        backgroundColor: "#FF9800", // laranja 🍊
+        backgroundColor: "#541414",
     },
 
     cardInner: {
